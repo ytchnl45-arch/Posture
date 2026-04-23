@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Posture Correction Session</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --card: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #c8f060;
+    --accent2: #60d4f0;
+    --accent3: #f06080;
+    --text: #f0ede8;
+    --muted: #888;
+    --warn: #f0b060;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 40px 24px 24px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(200,240,96,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 10vw, 72px);
+    line-height: 0.9;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .header h1 span { color: var(--accent); }
+
+  .issues-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .issue-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .issue-chip.active { border-color: var(--accent3); color: var(--accent3); }
+
+  /* SESSION OVERVIEW */
+  .overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    background: var(--bg);
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* PHASES */
+  .phases {
+    padding: 0 0 60px;
+  }
+
+  .phase {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .phase-header:hover { background: var(--surface); }
+
+  .phase-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    min-width: 28px;
+  }
+  .phase-title {
+    flex: 1;
+  }
+  .phase-title h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .phase-title p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .phase-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .phase-badge.warm { border-color: var(--warn); color: var(--warn); }
+  .phase-badge.stretch { border-color: var(--accent2); color: var(--accent2); }
+  .phase-badge.activate { border-color: var(--accent); color: var(--accent); }
+  .phase-badge.strengthen { border-color: var(--accent3); color: var(--accent3); }
+  .phase-badge.cool { border-color: var(--muted); color: var(--muted); }
+  .phase-badge.integration { border-color: #b0a0f0; color: #b0a0f0; }
+
+  .phase-chevron {
+    font-size: 18px;
+    color: var(--muted);
+    transition: transform 0.3s;
+  }
+  .phase.open .phase-chevron { transform: rotate(180deg); }
+
+  .phase-body {
+    display: none;
+    padding: 0 24px 24px;
+  }
+  .phase.open .phase-body { display: block; }
+
+  /* EXERCISE CARDS */
+  .exercise-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ex-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .ex-card:hover { border-color: #444; }
+  .ex-card.done { opacity: 0.5; }
+  .ex-card.done .ex-name { text-decoration: line-through; }
+
+  .ex-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+
+  .ex-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 22px;
+  }
+
+  .ex-info { flex: 1; min-width: 0; }
+  .ex-name {
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+  .ex-target {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .ex-dose {
+    text-align: right;
+    min-width: 80px;
+  }
+  .ex-sets {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .ex-reps {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .ex-check {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    color: transparent;
+    background: transparent;
+  }
+  .ex-card.done .ex-check {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #000;
+  }
+
+  .ex-notes {
+    padding: 0 16px 14px 52px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: none;
+  }
+  .ex-card.expanded .ex-notes { display: block; }
+
+  .ex-expand {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 0 16px 14px 52px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+  }
+  .ex-expand:hover { color: var(--text); }
+
+  /* REST INDICATOR */
+  .rest-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 8px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    letter-spacing: 1px;
+  }
+
+  /* TIMER */
+  .timer-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+  }
+  .timer-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+    min-width: 80px;
+    line-height: 1;
+  }
+  .timer-display.running { color: var(--accent3); }
+  .timer-label {
+    flex: 1;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .timer-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 2px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .timer-btn:hover { background: var(--card); border-color: #555; }
+  .timer-btn.primary { border-color: var(--accent); color: var(--accent); }
+  .timer-btn.primary:hover { background: var(--accent); color: #000; }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    height: 2px;
+    background: var(--border);
+    margin: 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  /* PHASE DURATION */
+  .phase-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-right: 8px;
+    letter-spacing: 1px;
+  }
+
+  .session-complete {
+    display: none;
+    text-align: center;
+    padding: 60px 24px;
+  }
+  .session-complete h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .session-complete p { color: var(--muted); margin-top: 12px; }
+
+  .scroll-pad { height: 80px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Personalized Protocol</div>
+  <h1>POSTURE<br><span>RESET</span></h1>
+  <div class="issues-row">
+    <div class="issue-chip active">Forward Head</div>
+    <div class="issue-chip active">Rounded Shoulders</div>
+    <div class="issue-chip active">Anterior Pelvic Tilt</div>
+  </div>
+</div>
+
+<div class="overview">
+  <div class="stat"><div class="stat-num">~60</div><div class="stat-label">Minutes</div></div>
+  <div class="stat"><div class="stat-num">6</div><div class="stat-label">Phases</div></div>
+  <div class="stat"><div class="stat-num" id="totalDone">0</div><div class="stat-label">Completed</div></div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<div class="phases" id="phases">
+
+  <!-- PHASE 1: WARM UP -->
+  <div class="phase open" data-phase="1">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">01</div>
+      <div class="phase-title">
+        <h2>Warm Up</h2>
+        <p>Activate blood flow, prep joints</p>
+      </div>
+      <div class="phase-duration">~8 min</div>
+      <div class="phase-badge warm">Warm</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Neck Rolls</div>
+              <div class="ex-target">Cervical spine · neck</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">5</div><div class="ex-reps">each direction</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Slowly drop your chin to your chest, then roll your head to the right ear → back → left ear → chin. Keep it slow and controlled, never forced. 5 circles each direction.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">Shoulder Circles</div>
+              <div class="ex-target">Shoulder girdle · upper traps</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">10</div><div class="ex-reps">each direction</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Arms at your sides. Make big, full circles with your shoulders — up, back, down, forward. 10 reps backward (most important direction), then 10 forward. Feel the full range.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">03</div>
+            <div class="ex-info">
+              <div class="ex-name">Cat-Cow</div>
+              <div class="ex-target">Thoracic & lumbar spine</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">10</div><div class="ex-reps">slow reps</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">On hands and knees. Inhale — drop belly, lift head and tailbone (cow). Exhale — round spine up, tuck chin and pelvis (cat). Move with your breath. Spend 2 seconds at each end. This mobilizes every segment of your spine.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">04</div>
+            <div class="ex-info">
+              <div class="ex-name">Hip Circles</div>
+              <div class="ex-target">Hip joint · iliopsoas</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">10</div><div class="ex-reps">each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand feet hip-width apart, hands on hips. Make large circles with your pelvis — like a slow hula hoop. 10 circles each direction. You're warming up tight hip flexors that drive your anterior pelvic tilt.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">05</div>
+            <div class="ex-info">
+              <div class="ex-name">Thoracic Rotation (seated)</div>
+              <div class="ex-target">Mid-back · thoracic spine</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">10</div><div class="ex-reps">each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Sit cross-legged or on a chair. Cross arms over chest. Rotate your torso to look over your right shoulder, hold 1 sec, return, then left. Keep hips still — this is all mid-back rotation. Critical for rounded shoulders.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2: STRETCHING -->
+  <div class="phase" data-phase="2">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">02</div>
+      <div class="phase-title">
+        <h2>Deep Stretching</h2>
+        <p>Release tight, overactive muscles</p>
+      </div>
+      <div class="phase-duration">~15 min</div>
+      <div class="phase-badge stretch">Stretch</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Doorway Chest Stretch</div>
+              <div class="ex-target">Pec major & minor · anterior shoulder</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×60</div><div class="ex-reps">sec holds</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand in a doorway. Place forearms on the door frame at 90° (like a goalpost). Step one foot through and lean gently forward until you feel the stretch across your chest. Don't force it — hold 60 sec. This is your most important stretch — tight pecs are the primary driver of your rounded shoulders.</div>
+          <div class="rest-note">REST — 30 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">Kneeling Hip Flexor Stretch</div>
+              <div class="ex-target">Iliopsoas · rectus femoris</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×60</div><div class="ex-reps">sec each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Kneel on one knee (right knee down, left foot forward). Tuck your pelvis under — squeeze your right glute and posteriorly tilt your pelvis. Then shift your weight forward gently. You should feel a deep stretch at the front of your right hip. Do NOT arch your back. This directly addresses your anterior pelvic tilt.</div>
+          <div class="rest-note">REST — 30 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">03</div>
+            <div class="ex-info">
+              <div class="ex-name">Chin Tuck + Neck Flexor Stretch</div>
+              <div class="ex-target">Suboccipitals · SCM · upper traps</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×45</div><div class="ex-reps">sec holds</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand or sit tall. Tuck your chin back (creating a double chin — yes really). Then gently add a slight downward nod. You'll feel tension at the base of your skull and the back of your neck. Hold. This lengthens the short muscles that pull your head forward.</div>
+          <div class="rest-note">REST — 30 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">04</div>
+            <div class="ex-info">
+              <div class="ex-name">Upper Trap Stretch</div>
+              <div class="ex-target">Upper trapezius · levator scapulae</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×45</div><div class="ex-reps">sec each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Sit or stand. Drop your right ear toward your right shoulder. Place your right hand lightly on top of your head — don't pull, just let gravity help. You'll feel a stretch up the left side of your neck. Hold. Switch sides. These muscles get chronically tight with forward head posture.</div>
+          <div class="rest-note">REST — 30 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">05</div>
+            <div class="ex-info">
+              <div class="ex-name">Thread the Needle</div>
+              <div class="ex-target">Thoracic spine · rhomboids · posterior shoulder</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×45</div><div class="ex-reps">sec each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">On hands and knees. Slide your right arm along the floor under your left arm, letting your right shoulder and temple drop to the floor. Left arm stays planted. Feel the rotation and stretch through your mid-back and behind your right shoulder. Great for thoracic mobility.</div>
+          <div class="rest-note">REST — 30 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">06</div>
+            <div class="ex-info">
+              <div class="ex-name">Quadratus Lumborum Stretch</div>
+              <div class="ex-target">QL · lateral lower back</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">2×60</div><div class="ex-reps">sec each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand feet wide. Reach your right arm up and over to the left, side-bending your torso. Left hand on hip for support. Keep hips square and facing forward — don't rotate. You should feel this on the right side of your lower back/hip. The QL gets tight with anterior pelvic tilt.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: ACTIVATION -->
+  <div class="phase" data-phase="3">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">03</div>
+      <div class="phase-title">
+        <h2>Activation</h2>
+        <p>Wake up inhibited, underactive muscles</p>
+      </div>
+      <div class="phase-duration">~10 min</div>
+      <div class="phase-badge activate">Activate</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Chin Tucks (wall)</div>
+              <div class="ex-target">Deep neck flexors · longus colli</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×15</div><div class="ex-reps">3 sec holds</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand with your back against a wall, heels 2 inches from the wall. Press your entire back flat. Now retract your chin (making a double chin) and try to touch the back of your head to the wall. Hold 3 seconds. Release. This activates the deep neck flexors that are completely shut off in forward head posture.</div>
+          <div class="rest-note">REST — 45 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">Scapular Wall Slides</div>
+              <div class="ex-target">Lower traps · serratus anterior</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×12</div><div class="ex-reps">slow reps</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand against a wall. Press your lower back, upper back, and head into the wall. Place arms in a "W" position — elbows bent, backs of hands touching the wall. Slowly slide arms up into a "Y" (overhead), keeping ALL contact points on the wall. Lower back down to W. This is extremely hard if you have rounded shoulders — that's the point.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">03</div>
+            <div class="ex-info">
+              <div class="ex-name">Dead Bug</div>
+              <div class="ex-target">Transverse abdominis · deep core</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×10</div><div class="ex-reps">each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie on your back, arms pointing to the ceiling, knees bent at 90° in the air (like a dead bug). PRESS your lower back completely flat into the floor — this is essential. Slowly extend your right arm overhead and left leg down simultaneously, hovering just above the floor. Return. Switch sides. If your back arches at all, reduce range. This trains the deep core that's disengaged with your pelvic tilt.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">04</div>
+            <div class="ex-info">
+              <div class="ex-name">Glute Bridge</div>
+              <div class="ex-target">Glutes · hamstrings · posterior chain</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×15</div><div class="ex-reps">3 sec squeeze</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie on your back, knees bent, feet flat on the floor hip-width apart. Press through your heels and squeeze your glutes hard as you drive your hips up. At the top, tuck your pelvis under (posterior tilt) and hold for 3 seconds — really squeeze. Your glutes are inhibited by tight hip flexors, and this directly counters anterior pelvic tilt.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4: STRENGTHEN -->
+  <div class="phase" data-phase="4">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">04</div>
+      <div class="phase-title">
+        <h2>Strengthening</h2>
+        <p>Build postural muscle endurance</p>
+      </div>
+      <div class="phase-duration">~18 min</div>
+      <div class="phase-badge strengthen">Strengthen</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Band Pull-Aparts</div>
+              <div class="ex-target">Rear delts · rhomboids · mid traps</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">4×20</div><div class="ex-reps">1 sec squeeze</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Hold a resistance band (or towel) at shoulder height with straight arms, hands slightly wider than shoulders. Pull the band apart, spreading it across your chest, squeezing your shoulder blades together at the end. Hold 1 second. Return slowly. No band? Use a rolled-up bedsheet. This is the single best exercise for rounded shoulders.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">YTW raises (prone)</div>
+              <div class="ex-target">Lower traps · mid traps · rear delts</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×10</div><div class="ex-reps">each letter</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie face down on your bed or floor, arms overhead. Y — raise arms to a Y shape (overhead diagonal). T — arms straight out to the sides. W — elbows bent at 90°, pull back like a flex. Hold each position 2 seconds at the top. These muscles are chronically weak in round-shoulder posture and almost never trained.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">03</div>
+            <div class="ex-info">
+              <div class="ex-name">Bird-Dog</div>
+              <div class="ex-target">Erector spinae · glutes · core stability</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×12</div><div class="ex-reps">each side · 3 sec hold</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">On hands and knees, spine neutral (not arched, not rounded). Extend your right arm forward and left leg back simultaneously. Hold for 3 seconds — fight to keep your hips perfectly level. Don't rotate. Return and switch. This builds the paraspinal muscles that support upright posture.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">04</div>
+            <div class="ex-info">
+              <div class="ex-name">Single-Leg Glute Bridge</div>
+              <div class="ex-target">Glutes · hip stabilizers</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×12</div><div class="ex-reps">each leg · 2 sec hold</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Same as the glute bridge but extend one leg straight. Drive through the planted heel. Your hips will want to drop to the side — resist that. Hold 2 seconds at the top with a hard glute squeeze. Harder than it sounds. Builds unilateral glute strength to correct pelvic imbalances.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">05</div>
+            <div class="ex-info">
+              <div class="ex-name">Hollow Body Hold</div>
+              <div class="ex-target">Anterior core · hip flexors (lengthened)</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×30</div><div class="ex-reps">sec</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie on your back. Posteriorly tilt your pelvis — flatten your lower back into the floor. Legs extended to 45°, arms overhead. Hold this hollow shape. If your back peels off the floor, raise your legs higher. This trains anterior core in a way that directly counteracts lower back arching from your pelvic tilt.</div>
+          <div class="rest-note">REST — 60 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">06</div>
+            <div class="ex-info">
+              <div class="ex-name">Prone Cobra</div>
+              <div class="ex-target">Erector spinae · lower traps · glutes</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×15</div><div class="ex-reps">3 sec holds</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie face down, arms at your sides, palms facing the floor. Squeeze your glutes, then lift your chest off the floor while rotating your arms so palms face outward (thumbs up). Squeeze shoulder blades together and DOWN. Hold 3 seconds. Lower. This is a full postural chain exercise — back extensors, lower traps, glutes all fire together.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5: INTEGRATION -->
+  <div class="phase" data-phase="5">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">05</div>
+      <div class="phase-title">
+        <h2>Integration</h2>
+        <p>Repattern how you hold your body</p>
+      </div>
+      <div class="phase-duration">~6 min</div>
+      <div class="phase-badge integration">Integrate</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Wall Posture Hold</div>
+              <div class="ex-target">Full postural alignment</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3×60</div><div class="ex-reps">sec</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Stand with heels, calves, glutes, mid-back, and back of head all touching the wall. Feet 2 inches from wall. Chin tucked. Arms at sides, palms facing forward. Breathe normally and hold. This teaches your nervous system what neutral posture feels like. It will feel weird — that weirdness means it's working. After the hold, step away from the wall and try to maintain that same feeling while walking around.</div>
+          <div class="rest-note">REST — 45 sec between sets</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">Posture Walking</div>
+              <div class="ex-target">Gait integration · proprioception</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">3</div><div class="ex-reps">min walk</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Walk around your room with deliberate posture: chin tucked, ears over shoulders, chest open, glutes slightly engaged, belly button pulled in gently. Take slow, deliberate steps. This isn't exercise — it's neurological reprogramming. You're creating a new default. The goal is to feel what correct posture feels like while moving.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 6: COOL DOWN -->
+  <div class="phase" data-phase="6">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">06</div>
+      <div class="phase-title">
+        <h2>Cool Down</h2>
+        <p>Lock in gains, reduce soreness</p>
+      </div>
+      <div class="phase-duration">~5 min</div>
+      <div class="phase-badge cool">Cool Down</div>
+      <div class="phase-chevron">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="exercise-grid">
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">01</div>
+            <div class="ex-info">
+              <div class="ex-name">Child's Pose</div>
+              <div class="ex-target">Thoracic · lower back · shoulders</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">2×90</div><div class="ex-reps">sec</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Kneel, sit back on your heels, arms stretched forward on the floor. Let your chest sink toward the floor. Breathe deeply into your back. Walk your hands to the right to stretch the left side, then left to stretch the right. Full body decompression.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">02</div>
+            <div class="ex-info">
+              <div class="ex-name">Supine Spinal Twist</div>
+              <div class="ex-target">Thoracic & lumbar · IT band</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">2×60</div><div class="ex-reps">sec each side</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie on your back. Bring right knee to chest, then gently guide it across your body to the left. Arms out in a T, both shoulders stay on the floor. Look right. Feel the rotation through your spine. Breathe and let gravity do the work.</div>
+          <div class="rest-note">REST — 30 sec</div>
+        </div>
+
+        <div class="ex-card" onclick="expandCard(this)">
+          <div class="ex-main">
+            <div class="ex-num">03</div>
+            <div class="ex-info">
+              <div class="ex-name">Diaphragmatic Breathing</div>
+              <div class="ex-target">Nervous system · postural reset</div>
+            </div>
+            <div class="ex-dose"><div class="ex-sets">10</div><div class="ex-reps">deep breaths</div></div>
+            <div class="ex-check" onclick="toggleDone(event, this)">✓</div>
+          </div>
+          <span class="ex-expand">▸ How to do it</span>
+          <div class="ex-notes">Lie on your back. Place one hand on your chest, one on your belly. Breathe in for 4 counts — only the hand on your belly should rise. Breathe out slowly for 6 counts. Correct breathing is actually a posture issue — chest breathing keeps upper traps tense all day. Belly breathing is the finish line.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="session-complete" id="sessionComplete">
+  <h2>SESSION DONE</h2>
+  <p>Rest 24–48 hrs before repeating.<br>Aim for 3–4× per week for the first month.</p>
+</div>
+
+<div class="scroll-pad"></div>
+
+<!-- TIMER BAR -->
+<div class="timer-bar">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-label" id="timerLabel">Session timer</div>
+  <button class="timer-btn" onclick="resetTimer()">Reset</button>
+  <button class="timer-btn primary" id="timerStartBtn" onclick="toggleTimer()">Start</button>
+</div>
+
+<script>
+  // --- TIMER ---
+  let timerInterval = null;
+  let timerSeconds = 0;
+  let timerRunning = false;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent = pad(m) + ':' + pad(s);
+  }
+
+  function toggleTimer() {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timerStartBtn').textContent = 'Resume';
+      document.getElementById('timerDisplay').classList.remove('running');
+    } else {
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+      timerRunning = true;
+      document.getElementById('timerStartBtn').textContent = 'Pause';
+      document.getElementById('timerDisplay').classList.add('running');
+      document.getElementById('timerLabel').textContent = 'Session in progress';
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerSeconds = 0;
+    updateTimerDisplay();
+    document.getElementById('timerStartBtn').textContent = 'Start';
+    document.getElementById('timerDisplay').classList.remove('running');
+    document.getElementById('timerLabel').textContent = 'Session timer';
+  }
+
+  // --- PHASES ---
+  function togglePhase(header) {
+    const phase = header.parentElement;
+    phase.classList.toggle('open');
+  }
+
+  // --- CARDS ---
+  function expandCard(card) {
+    card.classList.toggle('expanded');
+  }
+
+  function toggleDone(event, btn) {
+    event.stopPropagation();
+    const card = btn.closest('.ex-card');
+    card.classList.toggle('done');
+    updateProgress();
+  }
+
+  // --- PROGRESS ---
+  const totalExercises = document.querySelectorAll('.ex-card').length;
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.ex-card.done').length;
+    document.getElementById('totalDone').textContent = done;
+    const pct = (done / totalExercises) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    if (done === totalExercises) {
+      document.getElementById('sessionComplete').style.display = 'block';
+      document.getElementById('sessionComplete').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+</script>
+
+</body>
+</html>
